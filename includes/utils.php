@@ -2,7 +2,6 @@
     include_once "values.php";
     include_once "db.php";
 
-    
     // Utils
     function sendError(int $code_error): void {
         header('Location: '.WORKSPACE.'/error.php?code='.$code_error);
@@ -476,6 +475,101 @@
         }
     }
 
+    function insertConjoint(stdClass $data, PDO $pdo): ?int {
+        try {
+            $stmt = $pdo->prepare("
+                INSERT INTO conjoint (
+                    nom, prenom, date_naissance, lieu_naissance, nationalite, profession, organisme, adresse_organisme, id_employe
+                )
+                VALUES (
+                    :nom, :prenom, :date_naissance, :lieu_naissance, :nationalite, :profession, :organisme, :adresse_organisme, :id_employe
+                )
+            ");
+            $stmt->execute([
+                'nom'               => $data->nom,
+                'prenom'            => $data->prenom,
+                'date_naissance'    => $data->date_naissance,
+                'lieu_naissance'    => $data->lieu_naissance,
+                'nationalite'       => $data->nationalite,
+                'profession'        => $data->profession,
+                'organisme'         => $data->organisme ?? null,
+                'adresse_organisme' => $data->adresse_organisme ?? null,
+                'id_employe'        => (int)$data->id_employe
+            ]);
+            $id = (int)$pdo->lastInsertId();
+            return ($id) ? $id : null;
+        } catch (Exception $e) {
+            return null;
+        }
+    }
+
+    function insertEnfant(stdClass $data, PDO $pdo): ?int {
+        try {
+            $stmt = $pdo->prepare("
+                INSERT INTO enfant (
+                    prenom, date_naissance, id_employe
+                )
+                VALUES (
+                    :prenom, :date_naissance, :id_employe
+                )
+            ");
+            $stmt->execute([
+                'prenom'         => $data->prenom,
+                'date_naissance' => $data->date_naissance,
+                'id_employe'     => $data->id_employe
+            ]);
+            $id = (int)$pdo->lastInsertId();
+            return ($id) ? $id : null;
+        } catch (Exception $e) {
+            return null;
+        }
+    }
+
+    function insertDiplome(stdClass $data, PDO $pdo): ?int {
+        try {
+            $stmt = $pdo->prepare("
+                INSERT INTO diplome (
+                    nom, niveau, annee_obtention, id_employe
+                )
+                VALUES (
+                    :nom, :niveau, :annee_obtention, :id_employe
+                )
+            ");
+            $stmt->execute([
+                'nom'             => $data->nom,
+                'niveau'          => $data->niveau,
+                'annee_obtention' => $data->annee_obtention,
+                'id_employe'      => $data->id_employe
+            ]);
+            $id = (int)$pdo->lastInsertId();
+            return ($id) ? $id : null;
+        } catch (Exception $e) {
+            return null;
+        }
+    }
+
+    function insertAffectation(stdClass $data, PDO $pdo): ?int {
+        try {
+            $stmt = $pdo->prepare("
+                INSERT INTO affectation (
+                    id_employe, id_poste, date
+                )
+                VALUES (
+                    :id_employe, :id_poste, :date_affection
+                )
+            ");
+            $stmt->execute([
+                'id_employe'     => (int)$data->id_employe,
+                'id_poste'       => (int)$data->id_poste,
+                'date_affection' => $data->date_affection
+            ]);
+            $id = (int)$pdo->lastInsertId();
+            return ($id) ? $id : null;
+        } catch (Exception $e) {
+            return null;
+        }
+    }
+
     // UPDATE
     function updateDepartement(int $id, string $nom, PDO $pdo): bool {
         try {
@@ -584,6 +678,96 @@
         }
     }
 
+    function updateConjoint(stdClass $data, PDO $pdo): ?int {
+        try {
+            $stmt = $pdo->prepare("
+                UPDATE conjoint SET
+                    nom = :nom,
+                    prenom = :prenom,
+                    date_naissance = :date_naissance,
+                    lieu_naissance = :lieu_naissance,
+                    nationalite = :nationalite,
+                    profession = :profession,
+                    organisme = :organisme,
+                    adresse_organisme = :adresse_organisme
+                WHERE id = :id
+            ");
+            $stmt->execute([
+                'nom'               => $data->nom,
+                'prenom'            => $data->prenom,
+                'date_naissance'    => $data->date_naissance,
+                'lieu_naissance'    => $data->lieu_naissance,
+                'nationalite'       => $data->nationalite,
+                'profession'        => $data->profession,
+                'organisme'         => $data->organisme ?? null,
+                'adresse_organisme' => $data->adresse_organisme ?? null,
+                'id'                => $data->id
+            ]);
+            return (int)$data->id;
+        } catch (Exception $e) {
+            return null;
+        }
+    }
+
+    function updateEnfant(stdClass $data, PDO $pdo): ?int {
+        try {
+            $stmt = $pdo->prepare("
+                UPDATE enfant SET
+                    prenom = :prenom,
+                    date_naissance = :date_naissance
+                WHERE id = :id
+            ");
+            $stmt->execute([
+                'prenom'         => $data->prenom,
+                'date_naissance' => $data->date_naissance,
+                'id'             => $data->id
+            ]);
+            return (int)$data->id;
+        } catch (Exception $e) {
+            return null;
+        }
+    }
+
+    function updateDiplome(stdClass $data, PDO $pdo): ?int {
+        try {
+            $stmt = $pdo->prepare("
+                UPDATE diplome SET
+                    nom = :nom,
+                    niveau = :niveau,
+                    annee_obtention = :annee_obtention
+                WHERE id = :id
+            ");
+            $stmt->execute([
+                'nom'             => $data->nom,
+                'niveau'          => $data->niveau,
+                'annee_obtention' => $data->annee_obtention,
+                'id'              => $data->id
+            ]);
+            return (int)$data->id;
+        } catch (Exception $e) {
+            return null;
+        }
+    }
+
+    function updateAffectation(stdClass $data, PDO $pdo): ?int {
+        try {
+            $stmt = $pdo->prepare("
+                UPDATE affectation SET
+                    id_poste = :id_poste,
+                    date = :date_affection
+                WHERE id_employe = :id_employe
+            ");
+            $stmt->execute([
+                'id_poste'       => (int)$data->id_poste,
+                'date_affection' => $data->date_affection,
+                'id_employe'     => (int)$data->id_employe
+            ]);
+            return (int)$data->id_employe;
+        } catch (Exception $e) {
+            return null;
+        }
+    }
+
     // DELETE
     function deletePoste(int $id, PDO $pdo): bool {
         try {
@@ -686,6 +870,16 @@
             $stmt = $pdo->prepare("DELETE FROM affectation WHERE id = :id");
             if(!$stmt) return false;
             return $stmt->execute(['id' => $id]);
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    function deleteAffectationByIdEmploye(int $id_employe, PDO $pdo): bool {
+        try {
+            $stmt = $pdo->prepare("DELETE FROM affectation WHERE id_employe = :id_employe");
+            if(!$stmt) return false;
+            return $stmt->execute(['id_employe' => $id_employe]);
         } catch (PDOException $e) {
             return false;
         }

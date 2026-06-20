@@ -16,23 +16,8 @@
     $result = null;
     $input = json_decode(file_get_contents('php://input'));
 
-    if($_SERVER['REQUEST_METHOD'] === 'GET') {
-        if(!isset($_GET) || !isset($_GET['id_serv']) || !ctype_digit($_GET['id_serv'])) {
-            http_response_code(401);
-            echo json_encode([
-                "status" => 401,
-                "data" => "Requête mal formulée"
-            ]);
-
-            exit;
-        }
-
-        $result = getPostesByIdServ((int)$_GET['id_serv'], $pdo);
-
-        if(!$result) exit;
-    }
-    else if($_SERVER['REQUEST_METHOD'] === 'POST')  {
-        if(!isset($input) || !isset($input->nom) || !isset($input->id_service) || !ctype_digit($input->id_service)) {
+    if($_SERVER['REQUEST_METHOD'] === 'POST')  {
+        if(!isset($input) /* Ajouter les validation */) {
             http_response_code(401);
             echo json_encode([
                 "status" => 401,
@@ -42,10 +27,10 @@
             exit;
         }
         
-        $result = insertPoste((int)$input->id_service, strtolower(htmlspecialchars($input->nom)), $pdo);
+        $result = insertEnfant($input, $pdo);
     }
     else if($_SERVER['REQUEST_METHOD'] === 'PUT')  {
-        if(!isset($input) || !isset($input->id) || !ctype_digit($input->id) || !isset($input->nom)) {
+         if(!isset($input) /* Ajouter les validation */) {
             http_response_code(401);
             echo json_encode([
                 "status" => 401,
@@ -55,7 +40,7 @@
             exit;
         }
         
-        $result = updatePoste((int)$input->id, strtolower(htmlspecialchars($input->nom)), $pdo);
+        $result = updateEnfant($input, $pdo);
     }
     else if($_SERVER['REQUEST_METHOD'] === 'DELETE')  {
         if(!isset($input) || !isset($input->id) || !ctype_digit($input->id)) {
@@ -68,7 +53,7 @@
             exit;
         }
         
-        $result = deletePoste((int)$input->id, $pdo);
+        $result = deleteEnfant((int)$input->id, $pdo);
     }
     else {
         http_response_code(401);

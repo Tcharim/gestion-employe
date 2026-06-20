@@ -71,6 +71,52 @@
     
     <link rel="icon" href="images/images.jpg" type="image/jpeg">
 
+    <style>
+        .modal-overlay .form, form#form-edit-employe, form#form-conjoint, form#form-enfant, form#form-diplome, form#form-affectation {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            flex: 1 1 auto;
+            overflow: hidden;
+        }
+        .modal-body-scroll {
+            overflow-y: auto;
+            padding-right: 12px;
+            margin-right: -12px;
+            min-height: 0;
+            flex: 1 1 auto;
+            position: relative;
+        }
+        .modal-body-scroll::-webkit-scrollbar { width: 9px; }
+        .modal-body-scroll::-webkit-scrollbar-thumb { background: #c6c9ce; border-radius: 10px; border: 2px solid #fff; }
+        .modal-body-scroll::-webkit-scrollbar-thumb:hover { background: #a6a9ae; }
+        .modal-body-scroll::-webkit-scrollbar-track { background: #f4f5f7; border-radius: 10px; }
+        .modal-body-scroll { scrollbar-width: thin; scrollbar-color: #c6c9ce #f4f5f7; }
+
+        .modal-box { display: flex; flex-direction: column; overflow: hidden; }
+
+        .scroll-cue {
+            position: sticky;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 34px;
+            margin-top: -34px;
+            pointer-events: none;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.96) 75%);
+            opacity: 1;
+            transition: opacity 0.2s ease;
+        }
+        .scroll-cue.hide { opacity: 0; }
+        .scroll-cue i { font-size: 18px; color: #C0392B; margin-bottom: 4px; animation: scroll-bounce 1.4s ease-in-out infinite; }
+        @keyframes scroll-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
+
+        .modal-actions { flex-shrink: 0; }
+    </style>
+
 </head>
 <body>
     <?php include_once "includes/header.php" ?>
@@ -512,6 +558,10 @@
                             <input type="text" name="adresse_organisme">
                         </div>
                     </div>
+
+                    <div class="scroll-cue" id="scroll-cue-conjoint">
+                        <i class="ti ti-chevron-down"></i>
+                    </div>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="modal-btn modal-btn-cancel" onclick="closeModal('modal-add-conjoint')">Annuler</button>
@@ -540,6 +590,10 @@
                     <div class="form-group">
                         <label>Date de naissance</label>
                         <input type="date" name="date_naissance" required>
+                    </div>
+
+                    <div class="scroll-cue" id="scroll-cue-enfant">
+                        <i class="ti ti-chevron-down"></i>
                     </div>
                 </div>
                 <div class="modal-actions">
@@ -575,6 +629,10 @@
                             <label>Année d'obtention</label>
                             <input type="number" name="annee_obtention" min="1950" max="2100" required>
                         </div>
+                    </div>
+
+                    <div class="scroll-cue" id="scroll-cue-diplome">
+                        <i class="ti ti-chevron-down"></i>
                     </div>
                 </div>
                 <div class="modal-actions">
@@ -627,6 +685,10 @@
                             <input type="date" name="date_affection" required>
                         </div>
                     </div>
+
+                    <div class="scroll-cue" id="scroll-cue-affectation">
+                        <i class="ti ti-chevron-down"></i>
+                    </div>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="modal-btn modal-btn-cancel" onclick="closeModal('modal-add-affectation')">Annuler</button>
@@ -656,11 +718,32 @@
 
     <script src="javascripts/script.js"></script>
     <script>
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            const scrollArea = overlay.querySelector('.modal-body-scroll');
+            const cue = overlay.querySelector('.scroll-cue');
+            if (!scrollArea || !cue) return;
+
+            const updateCue = () => {
+                const atBottom = scrollArea.scrollTop + scrollArea.clientHeight >= scrollArea.scrollHeight - 4;
+                const hasOverflow = scrollArea.scrollHeight > scrollArea.clientHeight + 4;
+                cue.classList.toggle('hide', atBottom || !hasOverflow);
+            };
+
+            scrollArea.addEventListener('scroll', updateCue);
+
+            new MutationObserver(() => {
+                if (overlay.classList.contains('show')) {
+                    requestAnimationFrame(() => requestAnimationFrame(updateCue));
+                }
+            }).observe(overlay, { attributes: true, attributeFilter: ['class'] });
+        });
+    </script>
+    <script>
         /* ── Suppression générique conjoint / enfant / diplôme ── */
         const deleteEndpoints = {
-            conjoint: 'api/del_conjoint.php',
-            enfant: 'api/del_enfant.php',
-            diplome: 'api/del_diplome.php',
+            conjoint: 'api/conjoint.php',
+            enfant: 'api/enfant.php',
+            diplome: 'api/diplome.php',
         };
         const deleteLabels = {
             conjoint: 'ce conjoint',
@@ -668,61 +751,71 @@
             diplome: 'ce diplôme',
         };
         
-        const selectDep = document.getElementById('select-dep');
-        const selectService = document.getElementById('select-service');
-        const selectPoste = document.getElementById('select-poste');
+        const selectDepAff = document.getElementById('select-dep-aff');
+        const selectServiceAff = document.getElementById('select-service-aff');
+        const selectPosteAff = document.getElementById('select-poste-aff');
 
-        if (selectDep) {
-            selectDep.addEventListener('change', async function() {
-                fillSelect(selectPoste, [], '— Choisir un service d\'abord —');
-                selectPoste.disabled = true;
+        if (selectDepAff) {
+            selectDepAff.addEventListener('change', async function() {
+                fillSelect(selectPosteAff, [], '— Choisir un service d\'abord —');
+                selectPosteAff.disabled = true;
 
                 if (!this.value) {
-                    fillSelect(selectService, [], '— Choisir un département d\'abord —');
-                    selectService.disabled = true;
+                    fillSelect(selectServiceAff, [], '— Choisir un département d\'abord —');
+                    selectServiceAff.disabled = true;
                     return;
                 }
 
-                selectService.disabled = true;
-                fillSelect(selectService, [], 'Chargement...');
+                selectServiceAff.disabled = true;
+                fillSelect(selectServiceAff, [], 'Chargement...');
 
                 try {
                     const { status, data } = await getJson('api/service.php?id_dep=' + encodeURIComponent(this.value));
                     if (status >= 200 && status < 300) {
-                        fillSelect(selectService, data, '— Choisir un service —');
-                        selectService.disabled = false;
+                        fillSelect(selectServiceAff, data, '— Choisir un service —');
+                        selectServiceAff.disabled = false;
                     } else {
-                        fillSelect(selectService, [], 'Erreur de chargement');
+                        fillSelect(selectServiceAff, [], 'Erreur de chargement');
                     }
                 } catch (err) {
-                    fillSelect(selectService, [], 'Erreur réseau');
+                    fillSelect(selectServiceAff, [], 'Erreur réseau');
                 }
             });
         }
 
-        if (selectService) {
-            selectService.addEventListener('change', async function() {
+        if (selectServiceAff) {
+            selectServiceAff.addEventListener('change', async function() {
                 if (!this.value) {
-                    fillSelect(selectPoste, [], '— Choisir un service d\'abord —');
-                    selectPoste.disabled = true;
+                    fillSelect(selectPosteAff, [], '— Choisir un service d\'abord —');
+                    selectPosteAff.disabled = true;
                     return;
                 }
 
-                selectPoste.disabled = true;
-                fillSelect(selectPoste, [], 'Chargement...');
+                selectPosteAff.disabled = true;
+                fillSelect(selectPosteAff, [], 'Chargement...');
 
                 try {
                     const { status, data } = await getJson('api/poste.php?id_serv=' + encodeURIComponent(this.value));
                     if (status >= 200 && status < 300) {
-                        fillSelect(selectPoste, data, '— Choisir un poste —');
-                        selectPoste.disabled = false;
+                        fillSelect(selectPosteAff, data, '— Choisir un poste —');
+                        selectPosteAff.disabled = false;
                     } else {
-                        fillSelect(selectPoste, [], 'Erreur de chargement');
+                        fillSelect(selectPosteAff, [], 'Erreur de chargement');
                     }
                 } catch (err) {
-                    fillSelect(selectPoste, [], 'Erreur réseau');
+                    fillSelect(selectPosteAff, [], 'Erreur réseau');
                 }
             });
+        }
+
+        function openAddModal(modalId, formId, titleId, titleText) {
+            const form = document.getElementById(formId);
+            if (form) form.reset();
+            const hiddenId = form ? form.querySelector('input[type="hidden"][name="id"]') : null;
+            if (hiddenId) hiddenId.value = '';
+            const title = document.getElementById(titleId);
+            if (title) title.textContent = titleText;
+            openModal(modalId);
         }
 
         function printAttestation(idEmploye) {
@@ -748,7 +841,7 @@
                     closeModal('modal-edit-employe');
                     setTimeout(() => location.reload(), 600);
                 } else {
-                    showModalError('modal-edit-employe', data.message || 'Une erreur est survenue.');
+                    showModalError('modal-edit-employe', data || 'Une erreur est survenue.');
                 }
             } catch (err) {
                 showModalError('modal-edit-employe', 'Erreur réseau, veuillez réessayer.');
@@ -781,17 +874,17 @@
             const submitBtn = e.target.querySelector('.modal-btn-submit');
             const payload = Object.fromEntries(new FormData(e.target).entries());
             const isEdit = !!payload.id;
-            const url = isEdit ? 'api/update_conjoint.php' : 'api/add_conjoint.php';
+            const url = 'api/conjoint.php';
 
             setSubmitLoading(submitBtn, true, 'Enregistrer');
             try {
-                const { status, data } = await postJson(url, payload);
+                const { status, data } = (isEdit)?await putJson(url, payload):await postJson(url, payload);
                 if (status >= 200 && status < 300) {
                     showToast(isEdit ? 'Conjoint modifié avec succès' : 'Conjoint ajouté avec succès', 'success');
                     closeModal('modal-add-conjoint');
                     setTimeout(() => location.reload(), 600);
                 } else {
-                    showModalError('modal-add-conjoint', data.message || 'Une erreur est survenue.');
+                    showModalError('modal-add-conjoint', data || 'Une erreur est survenue.');
                 }
             } catch (err) {
                 showModalError('modal-add-conjoint', 'Erreur réseau, veuillez réessayer.');
@@ -816,17 +909,17 @@
             const submitBtn = e.target.querySelector('.modal-btn-submit');
             const payload = Object.fromEntries(new FormData(e.target).entries());
             const isEdit = !!payload.id;
-            const url = isEdit ? 'api/update_enfant.php' : 'api/add_enfant.php';
+            const url = 'api/enfant.php';
 
             setSubmitLoading(submitBtn, true, 'Enregistrer');
             try {
-                const { status, data } = await postJson(url, payload);
+                const { status, data } = (isEdit)?await putJson(url, payload):await postJson(url, payload);
                 if (status >= 200 && status < 300) {
                     showToast(isEdit ? 'Enfant modifié avec succès' : 'Enfant ajouté avec succès', 'success');
                     closeModal('modal-add-enfant');
                     setTimeout(() => location.reload(), 600);
                 } else {
-                    showModalError('modal-add-enfant', data.message || 'Une erreur est survenue.');
+                    showModalError('modal-add-enfant', data || 'Une erreur est survenue.');
                 }
             } catch (err) {
                 showModalError('modal-add-enfant', 'Erreur réseau, veuillez réessayer.');
@@ -851,17 +944,17 @@
             const submitBtn = e.target.querySelector('.modal-btn-submit');
             const payload = Object.fromEntries(new FormData(e.target).entries());
             const isEdit = !!payload.id;
-            const url = isEdit ? 'api/update_diplome.php' : 'api/add_diplome.php';
+            const url = 'api/diplome.php';
 
             setSubmitLoading(submitBtn, true, 'Enregistrer');
             try {
-                const { status, data } = await postJson(url, payload);
+                const { status, data } = (isEdit)?await putJson(url, payload):await postJson(url, payload);
                 if (status >= 200 && status < 300) {
                     showToast(isEdit ? 'Diplôme modifié avec succès' : 'Diplôme ajouté avec succès', 'success');
                     closeModal('modal-add-diplome');
                     setTimeout(() => location.reload(), 600);
                 } else {
-                    showModalError('modal-add-diplome', data.message || 'Une erreur est survenue.');
+                    showModalError('modal-add-diplome', data || 'Une erreur est survenue.');
                 }
             } catch (err) {
                 showModalError('modal-add-diplome', 'Erreur réseau, veuillez réessayer.');
@@ -878,21 +971,15 @@
             const idDep = <?= json_encode($employe['id_departement'] ?? null) ?>;
             const idService = <?= json_encode($employe['id_service'] ?? null) ?>;
             const idPoste = <?= json_encode($employe['id_poste'] ?? null) ?>;
-            const idCategorie = <?= json_encode($employe['id_categorie'] ?? null) ?>;
-            const idEchellon = <?= json_encode($employe['echellon_num'] ?? null) ?>;
-            const dateObtention = <?= json_encode($employe['date_obtention_echellonnement'] ?? null) ?>;
 
             const form = document.getElementById('form-affectation');
-            if (idCategorie) form.querySelector('[name="id_categorie"]').value = idCategorie;
-            if (idEchellon) form.querySelector('[name="id_echellon"]').value = idEchellon;
-            if (dateObtention) form.querySelector('[name="date_obtention_echellonnement"]').value = dateObtention;
 
             if (idDep) {
                 selectDepAff.value = idDep;
                 selectServiceAff.disabled = true;
                 fillSelect(selectServiceAff, [], 'Chargement...');
                 try {
-                    const { status, data } = await getJson('api/get_service.php?id_dep=' + encodeURIComponent(idDep));
+                    const { status, data } = await getJson('api/service.php?id_dep=' + encodeURIComponent(idDep));
                     if (status >= 200 && status < 300) {
                         fillSelect(selectServiceAff, data, '— Choisir un service —', idService);
                         selectServiceAff.disabled = false;
@@ -904,7 +991,7 @@
                 selectPosteAff.disabled = true;
                 fillSelect(selectPosteAff, [], 'Chargement...');
                 try {
-                    const { status, data } = await getJson('api/get_poste.php?id_serv=' + encodeURIComponent(idService));
+                    const { status, data } = await getJson('api/poste.php?id_serv=' + encodeURIComponent(idService));
                     if (status >= 200 && status < 300) {
                         fillSelect(selectPosteAff, data, '— Choisir un poste —', idPoste);
                         selectPosteAff.disabled = false;
@@ -919,17 +1006,17 @@
             const submitBtn = e.target.querySelector('.modal-btn-submit');
             const payload = Object.fromEntries(new FormData(e.target).entries());
             const isEdit = <?= !empty($employe['poste_nom']) ? 'true' : 'false' ?>;
-            const url = isEdit ? 'api/update_affectation.php' : 'api/add_affectation.php';
+            const url = 'api/affectation.php';
 
             setSubmitLoading(submitBtn, true, 'Enregistrer');
             try {
-                const { status, data } = await postJson(url, payload);
+                const { status, data } = (isEdit)?await putJson(url, payload):await postJson(url, payload);
                 if (status >= 200 && status < 300) {
                     showToast(isEdit ? 'Affectation modifiée avec succès' : 'Affectation ajoutée avec succès', 'success');
                     closeModal('modal-add-affectation');
                     setTimeout(() => location.reload(), 600);
                 } else {
-                    showModalError('modal-add-affectation', data.message || 'Une erreur est survenue.');
+                    showModalError('modal-add-affectation', data || 'Une erreur est survenue.');
                 }
             } catch (err) {
                 showModalError('modal-add-affectation', 'Erreur réseau, veuillez réessayer.');
@@ -938,7 +1025,7 @@
             }
         });
 
-        function confirmDeleteAffectation(idEmploye) {
+        function confirmDeleteAffectation(id_employe) {
             document.getElementById('confirm-delete-text').textContent =
                 "Êtes-vous sûr de vouloir supprimer l'affectation de cet employé ?";
             const btn = document.getElementById('btn-confirm-delete');
@@ -946,13 +1033,13 @@
             btn.onclick = async function() {
                 setSubmitLoading(btn, true, idleHtml);
                 try {
-                    const res = await fetch('api/delete_affectation.php?id_employe=' + encodeURIComponent(idEmploye), { method: 'DELETE' });
-                    const json = await res.json();
-                    if (json.status >= 200 && json.status < 300) {
+                    
+                    const {status, data} = await deleteJson('api/affectation.php', {'id_employe': id_employe.toString()});
+                    if (status >= 200 && status < 300) {
                         showToast('Affectation supprimée avec succès', 'success');
                         setTimeout(() => location.reload(), 600);
                     } else {
-                        showModalError('modal-confirm-delete', json.data?.message || 'Une erreur est survenue.');
+                        showModalError('modal-confirm-delete', data || 'Une erreur est survenue.');
                         setSubmitLoading(btn, false, idleHtml);
                     }
                 } catch (err) {
