@@ -1,0 +1,147 @@
+.dashboard-main {
+    min-height: 90vh;
+    display: flex;
+}
+
+section {
+    display:flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    width: 85%;
+}
+
+aside {
+    width: 15%;
+    background: #fff;
+    border-right: 1px solid #e5e7eb;
+    padding: 1rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 100vh;
+}
+.aside-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: #aaa;
+    padding: 12px 16px 4px;
+}
+.aside-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 16px;
+    font-size: 13px;
+    color: #555;
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    transition: background 0.15s, color 0.15s;
+}
+.aside-link:hover { background: #f4f5f7; color: #1a1a2e; }
+.aside-link.active {
+    background: #fdecea;
+    color: #C0392B;
+    border-left: 3px solid #C0392B;
+    font-weight: 600;
+}
+.aside-badge {
+    margin-left: auto;
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: #f4f5f7;
+    color: #888;
+    border: 1px solid #e5e7eb;
+}
+.aside-link.active .aside-badge { background: #fdecea; color: #C0392B; }
+.aside-divider { height: 1px; background: #e5e7eb; margin: 8px 16px; }
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem 1.25rem;
+    width: 80%;
+}
+
+.card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+}
+.card-title {
+    font-size: 13px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: #C0392B;
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 1.25rem;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 1rem 1.25rem;
+}
+.form-grid.cols-1 { grid-template-columns: 1fr; }
+.form-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field.full { grid-column: 1 / -1; }
+
+label {
+    font-size: 12px; font-weight: 600; color: #444;
+    display: flex; align-items: center; gap: 5px;
+}
+label .required { color: #C0392B; }
+
+input, select, textarea {
+    padding: 9px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1a1a2e;
+    background: #fafafa;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+    outline: none;
+}
+input:focus, select:focus, textarea:focus {
+    border-color: #C0392B;
+    box-shadow: 0 0 0 3px rgba(192,57,43,0.1);
+    background: #fff;
+}
+input.error, select.error { border-color: #e74c3c; }
+.error-msg { font-size: 11px; color: #e74c3c; display: none; margin-top: 2px; }
+.error-msg.show { display: block; }
+
+select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+.form-actions {
+    display: flex; gap: 12px; justify-content: flex-end;
+    margin-top: 1.5rem;
+}
+.btn {
+    padding: 10px 24px; border-radius: 8px;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; border: none;
+    display: inline-flex; align-items: center; gap: 7px;
+    transition: opacity 0.2s, transform 0.1s;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: #C0392B; color: #fff; }
+.btn-primary:hover { opacity: 0.88; }
+.btn-secondary { background: #f4f5f7; color: #444; border: 1px solid #d1d5db; }
+.btn-secondary:hover { background: #e9eaec; }
+
+@media (max-width: 580px) {
+    .form-grid.cols-3 { grid-template-columns: 1fr 1fr; }
+    .card { padding: 1.25rem; }
+    .form-actions { flex-direction: column; }
+    .btn { justify-content: center; }
+}

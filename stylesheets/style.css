@@ -1,0 +1,145 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    --color-text-red: #C0392B;
+    --color-text-gray: rgb(54, 54, 54);
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif
+}
+
+h2, h3 {
+    margin-bottom: 30px;
+    color: #0f2c4d;
+    font-size: 2rem;
+    position: relative;
+}
+
+h2::after, h3::after {
+    content: "";
+    display: block;
+    width: 70px;
+    height: 4px;
+    background: #d9534f;
+    margin: 10px auto 0;
+    border-radius: 2px;
+}
+
+h3 {
+    font-size: 1.2rem;
+}
+
+header.site-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    height: 10vh;
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+header.site-header .logo {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-text-red);
+    letter-spacing: 1px;
+}
+
+header.site-header .logo img {
+    height: 60px;
+}
+
+header.site-header .logo a {
+    transition: opacity ease-in-out 0.2s;
+}
+
+header.site-header .logo a:hover {
+    opacity: 0.5;
+}
+
+header.site-header nav {
+    margin-right: 10px;
+}
+
+header.site-header nav ul {
+    list-style: none;
+    display: flex;
+    gap: 2rem;
+    align-items: center; 
+}
+
+header.site-header nav ul a {
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    
+    color: var(--color-text-gray);
+    cursor: pointer; position: relative;
+    transition: color 0.2s;
+    transition: ease-out 0.3s opacity;
+}
+
+header.site-header nav ul a:hover {
+    opacity: 0.7;
+}
+
+header.site-header nav ul a::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -4px;
+    width: 0%;
+    height: 2px;
+    background: var(--color-text-gray);
+    border-radius: 1px;
+
+    transition: ease-out 0.3s width;
+    transition: ease-out 0.3s opacity;
+}
+
+header.site-header nav ul a:hover::after {
+    opacity: 0.7;
+    width: 100%;
+}
+
+header.site-header nav ul a.active {
+    color: var(--color-text-red);
+}
+
+header.site-header nav ul a.active::after {
+    width: 100%;
+    background: var(--color-text-red);
+}
+
+main.site-main {
+    min-height: 90vh;
+    background: linear-gradient(135deg, #0f2642 0%, #1a3a5c 50%, #1e3d5e 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+main.site-main::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 55%;
+    height: 100%;
+    background: linear-gradient(135deg, transparent 0%, rgba(20,50,80,0.6) 100%);
+    border-left: 1px solid rgba(255,255,255,0.05);
+    clip-path: polygon(8% 0%, 100% 0%, 100% 100%, 0% 100%);
+}
+
+.main-content {
+    position: relative;
+    z-index: 2;
+    max-width: 480px;
+}
